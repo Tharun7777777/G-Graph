@@ -67,7 +67,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
     }
 
 
-    const categorySelect = document.getElementById('category-select')
+const categorySelect = document.getElementById('category-select')
 const newCategoryInput = document.getElementById('new-category')
 
 categorySelect.addEventListener('change', () => {
@@ -84,7 +84,94 @@ let category = categorySelect.value
 if (category === 'Other') category = newCategoryInput.value
 
 
-    loadExpenses()
+
+
+// Don't redeclare categorySelect — use the one you already have
+const summaryCategorySelect = document.getElementById('summary-category-select');
+
+const todayBtn = document.getElementById("today-btn");
+const weekBtn = document.getElementById("week-btn");
+const monthBtn = document.getElementById("month-btn");
+
+const summaryBody = document.getElementById("summary-body");
+const grandTotalEl = document.getElementById("grand-total");
+
+async function loadSummary(period = "total") {
+  try {
+    const category = summaryCategorySelect.value; // now uses the summary filter
+ // use existing variable
+    const now = new Date();
+    let fromDate = null;
+
+    if (period === "today") {
+      fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === "week") {
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      fromDate = new Date(now.getFullYear(), now.getMonth(), diff);
+    } else if (period === "month") {
+      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    let query = supabase.from("transactions").select("*");
+
+    if (category) query = query.eq("category", category);
+   if (fromDate) query = query.gte("inserted_at", fromDate.toISOString());
+
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const totals = {};
+    let grandTotal = 0;
+
+    data.forEach(t => {
+      const cat = t.category || "Uncategorized";
+      totals[cat] = (totals[cat] || 0) + Number(t.expense);
+      grandTotal += Number(t.expense);
+    });
+
+    summaryBody.innerHTML = "";
+    Object.entries(totals).forEach(([cat, amt]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${cat}</td><td>${amt.toFixed(2)}</td>`;
+      summaryBody.appendChild(tr);
+    });
+
+    grandTotalEl.textContent = `Grand Total: ${grandTotal.toFixed(2)}`;
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load summary");
+  }
+}
+
+// Buttons
+todayBtn.addEventListener("click", () => loadSummary("today"));
+weekBtn.addEventListener("click", () => loadSummary("week"));
+monthBtn.addEventListener("click", () => loadSummary("month"));
+
+// Load total by default
+loadSummary("total");
+summaryCategorySelect.addEventListener('change', () => loadSummary());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+loadExpenses()
 
 
   </script>
@@ -119,5 +206,60 @@ if (category === 'Other') category = newCategoryInput.value
     <thead><tr><th>category</th><th>expense</th><th>Date</th></tr></thead>
     <tbody id="expenses-body"></tbody>
   </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>Expense Table</h2>
+
+  <!-- Summary Table Category Filter -->
+<label for="summary-category-select">Filter by Category:</label>
+<select id="summary-category-select">
+  <option value="">All Categories</option>
+  <option value="Food">Food</option>
+  <option value="Transport">Transport</option>
+  <option value="Bills">Bills</option>
+  <option value="Entertainment">Entertainment</option>
+  <option value="Other">Other</option>
+</select>
+
+
+<!-- Filter buttons -->
+<div style="margin-bottom: 1rem;">
+  <button id="today-btn">Today</button>
+  <button id="week-btn">This Week</button>
+  <button id="month-btn">This Month</button>
+</div>
+
+<!-- Summary Table -->
+<table border="1" cellpadding="6" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Amount Spent</th>
+    </tr>
+  </thead>
+  <tbody id="summary-body">
+    <!-- Filled dynamically by script -->
+  </tbody>
+</table>
+
+<!-- Grand Total -->
+<div id="grand-total" style="margin-top:1rem; font-weight:bold;">
+  Grand Total: 0
+</div>
+
+
+
 </body>
 </html>
