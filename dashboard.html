@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notesList = document.getElementById('notes-list');
     const noteForm = document.getElementById('note-form');
     const noteInput = document.getElementById('note-input');
+  const editBtn = document.createElement('button');
+  const delBtn = document.createElement('button');
     
 
   // Redirect if not logged in
@@ -68,18 +70,65 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load expenses table
   async function loadExpenses() {
-    const { data, error } = await supabase.from('transactions')
-      .select('category, expense, inserted_at')
-      .order('inserted_at', { ascending: false });
-    if (error) return console.error(error);
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id, category, expense, description, inserted_at')
+    .order('inserted_at', { ascending: false });
 
-    tableBody.innerHTML = '';
-    data?.forEach(row => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${row.category}</td><td>${row.expense}</td><td>${new Date(row.inserted_at).toLocaleString()}</td>`;
-      tableBody.appendChild(tr);
-    });
-  }
+  if (error) return console.error(error);
+
+  tableBody.innerHTML = '';
+
+  data.forEach(exp => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${exp.category}</td>
+      <td>${exp.expense}</td>
+      <td>${new Date(exp.inserted_at).toLocaleString()}</td>
+      <td>${exp.description || ''}</td>
+    `;
+
+    // Edit button
+    const editTd = document.createElement('td');
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = async () => {
+      const newCategory = prompt('Category:', exp.category) || exp.category;
+      const newExpense = parseFloat(prompt('Expense:', exp.expense)) || exp.expense;
+      const newDesc = prompt('Description:', exp.description || '') || exp.description;
+
+      const { error } = await supabase
+        .from('transactions')
+        .update({ category: newCategory, expense: newExpense, description: newDesc })
+        .eq('id', exp.id);
+
+      if (error) return alert(error.message);
+      loadExpenses();
+      loadSummary();
+    };
+    editTd.appendChild(editBtn);
+    tr.appendChild(editTd);
+
+    // Delete button
+    const delTd = document.createElement('td');
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = async () => {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', exp.id);
+
+      if (error) return alert(error.message);
+      loadExpenses();
+      loadSummary();
+    };
+    delTd.appendChild(delBtn);
+    tr.appendChild(delTd);
+
+    tableBody.appendChild(tr);
+  });
+}
 
   // Add new expense
   document.getElementById('expense-form').addEventListener('submit', async (e) => {
@@ -240,10 +289,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadNotes();
     });
 
-    // Initial load
-    loadNotes();
+
 
   // Initial load
+  loadNotes();
   await loadCategories();
   await loadExpenses();
   await loadSummary();
@@ -278,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   <h2>Your Expenses</h2>
   <table border="1">
-    <thead><tr><th>category</th><th>expense</th><th>Date</th></tr></thead>
+    <thead><tr><th>category</th><th>expense</th><th>Date</th><th>Description</th><th>Edit</th><th>Delete</th></tr></thead>
     <tbody id="expenses-body"></tbody>
   </table>
 
