@@ -16,6 +16,21 @@
   </style>
 </head>
 <body>
+<script type="module">  
+import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+
+  const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+ // Logout
+ 
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return alert('Logout failed');
+    window.location.href = 'index.html';
+  });});
+</script>
+
+<button id="logout-btn">Logout</button>
   <h1>G-Graph Chatbot</h1>
 
   <div id="chat"></div>
