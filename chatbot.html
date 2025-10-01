@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G-Graph Chatbot</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; }
+    #chat { border: 1px solid #ccc; padding: 1rem; height: 600px; overflow-y: auto; }
+    .msg { margin: .5rem 0; }
+    .user { color: blue; }
+    .bot  { color: green; }
+    form { display: flex; margin-top: 1rem; }
+    input { flex: 1; padding: .5rem; }
+    button { padding: .5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>G-Graph Chatbot</h1>
+
+  <div id="chat"></div>
+
+  <form id="chat-form">
+    <input type="text" id="user-input" placeholder="Ask about your expenses..." required />
+    <button type="submit">Send</button>
+  </form>
+
+  <script type="module" src="./chatbot.js"></script>
+</body>
+</html>
