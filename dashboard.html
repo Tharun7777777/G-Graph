@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Redirect if not logged in
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return window.location.href = 'index.html';
-
+  const userId = user.id;
   // Logout
   document.getElementById('logout-btn').addEventListener('click', async () => {
     const { error } = await supabase.auth.signOut();
@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data, error } = await supabase
     .from('transactions')
     .select('id, category, expense, description, inserted_at')
+    .eq("user_id", userId)
     .order('inserted_at', { ascending: false });
 
   if (error) return console.error(error);
@@ -394,7 +395,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   <ul id="notes-list"></ul>
 <button onclick="window.location.href = 'chatbot.html'">\chat yo</button>
 
-
 </body>
 </html>
-
