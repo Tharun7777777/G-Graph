@@ -17,9 +17,19 @@
       e.preventDefault()
       const email = e.target.email.value
       const password = e.target.password.value
-      const { error } = await supabase.auth.signUp({ email, password })
-      document.getElementById('status').textContent = error ? error.message : 'Check your email!'
+      const username=e.target.usernameInput.value
+        const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username: username }   // ✅ correctly stores in user_metadata
+      }
     })
+
+    document.getElementById('status').textContent = error
+      ? error.message
+      : 'Check your email to confirm your account!'
+  })
 
     // Login
     document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -38,6 +48,7 @@
 
   <h2>Sign Up</h2>
   <form id="signup-form">
+    <input type="text" name="usernameInput" placeholder="Enter your username" required>
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="password" placeholder="Password" required>
     <button>Sign Up</button>
