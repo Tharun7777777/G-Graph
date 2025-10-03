@@ -10,7 +10,418 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
+    const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+  const statusBox = document.getElementById('status');
+  const tableBody = document.getElementById('expenses-body');
+  const categorySelect = document.getElementById('category-select');
+  const newCategoryInput = document.getElementById('new-category');
+  const summaryCategorySelect = document.getElementById('summary-category-select');
+  const summaryBody = document.getElementById("summary-body");
+  const grandTotalEl = document.getElementById("grand-total");
+  const todayBtn = document.getElementById("today-btn");
+  const weekBtn = document.getElementById("week-btn");
+  const monthBtn = document.getElementById("month-btn");
+  const notesList = document.getElementById('notes-list');
+    const noteForm = document.getElementById('note-form');
+    const noteInput = document.getElementById('note-input');
+  const editBtn = document.createElement('button');
+  const delBtn = document.createElement('button');
+    
+
+  // Redirect if not logged in
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return window.location.href = 'index.html';
+  const userId = user.id;
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return alert('Logout failed');
+    window.location.href = 'index.html';
+  });
+//dispaky user name
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+if (user) {
+   const name = capitalize(user.user_metadata.username);
+  document.getElementById('greeting').textContent =
+    `Hello, ${name|| 'Guest'}! 👋`
+}
+
+
+  // Load categories and populate both dropdowns
+  async function loadCategories() {
+    const { data, error } = await supabase.from('categories').select('name').order('name');
+    if (error) return console.error(error);
+
+    // Reset dropdowns
+    categorySelect.innerHTML = '<option value="" disabled selected>--Select a category--</option>';
+    summaryCategorySelect.innerHTML = '<option value="">All Categories</option>';
+
+    // Add categories
+    data?.forEach(cat => {
+      const opt1 = document.createElement('option');
+      opt1.value = cat.name;
+      opt1.textContent = cat.name;
+      categorySelect.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = cat.name;
+      opt2.textContent = cat.name;
+      summaryCategorySelect.appendChild(opt2);
+    });
+
+    // Add "Other" option for adding new category
+    const otherOpt = document.createElement('option');
+    otherOpt.value = 'Other';
+    otherOpt.textContent = 'Other';
+    categorySelect.appendChild(otherOpt);
+  }
+
+  // Load expenses table
+  async function loadExpenses() {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id, category, expense, description, inserted_at')
+    .eq("user_id", userId)
+    .order('inserted_at', { ascending: false });
+
+  if (error) return console.error(error);
+
+  tableBody.innerHTML = '';
+
+  data.forEach(exp => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${exp.category}</td>
+      <td>${exp.expense}</td>
+      <td>${new Date(exp.inserted_at).toLocaleString()}</td>
+      <td>${exp.description || ''}</td>
+    `;
+
+    // Edit button
+    const editTd = document.createElement('td');
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = async () => {
+      const newCategory = prompt('Category:', exp.category) || exp.category;
+      const newExpense = parseFloat(prompt('Expense:', exp.expense)) || exp.expense;
+      const newDesc = prompt('Description:', exp.description || '') || exp.description;
+
+      const { error } = await supabase
+        .from('transactions')
+        .update({ category: newCategory, expense: newExpense, description: newDesc })
+        .eq('id', exp.id);
+
+      if (error) return alert(error.message);
+      loadExpenses();
+      loadSummary();
+    };
+    editTd.appendChild(editBtn);
+    tr.appendChild(editTd);
+
+    // Delete button
+    const delTd = document.createElement('td');
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = async () => {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', exp.id);
+
+      if (error) return alert(error.message);
+      loadExpenses();
+      loadSummary();
+    };
+    delTd.appendChild(delBtn);
+    tr.appendChild(delTd);
+
+    tableBody.appendChild(tr);
+  });
+}
+
+  // Add new expense
+  document.getElementById('expense-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let category = categorySelect.value;
+    const newCategory = newCategoryInput.value.trim();
+
+    if (category === 'Other' && newCategory) category = newCategory;
+
+    const expense = parseFloat(e.target.expense.value);
+    const description = e.target.description.value;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase.from('transactions')
+      .insert([{ category, expense, user_id: user.id, description }]);
+
+    if (error) {
+      statusBox.textContent = error.message;
+      return;
+    }
+
+    // Add new category to categories table if needed
+    if (category === newCategory && newCategory) {
+      await supabase.from('categories').upsert([{ name: newCategory }]);
+    }
+
+    statusBox.textContent = 'Expense added!';
+    e.target.reset();
+    newCategoryInput.style.display = 'none';
+
+    // Reload everything
+    await loadCategories();
+    await loadExpenses();
+    await loadSummary();
+  });
+
+  // Show/hide new category input
+  categorySelect.addEventListener('change', () => {
+    if (categorySelect.value === 'Other') {
+      newCategoryInput.style.display = 'inline-block';
+      newCategoryInput.required = true;
+    } else {
+      newCategoryInput.style.display = 'none';
+      newCategoryInput.required = false;
+    }
+  });
+
+  // Load summary table with sorting by category
+  async function loadSummary(period = "total") {
+    try {
+      const categoryFilter = summaryCategorySelect.value;
+      const now = new Date();
+      let fromDate = null;
+
+      if (period === "today") fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      else if (period === "week") {
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        fromDate = new Date(now.getFullYear(), now.getMonth(), diff);
+      } else if (period === "month") fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      let query = supabase.from("transactions").select("*").eq("user_id", userId);
+      if (categoryFilter) query = query.eq("category", categoryFilter);
+      if (fromDate) query = query.gte("inserted_at", fromDate.toISOString());
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // Calculate totals
+      const totals = {};
+      let grandTotal = 0;
+      data?.forEach(t => {
+        const cat = t.category || "Uncategorized";
+        totals[cat] = (totals[cat] || 0) + Number(t.expense);
+        grandTotal += Number(t.expense);
+      });
+
+      // Sort by category alphabetically
+      const sorted = Object.entries(totals).sort(([a], [b]) => a.localeCompare(b));
+
+      summaryBody.innerHTML = '';
+      sorted.forEach(([cat, amt]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${cat}</td><td>${amt.toFixed(2)}</td>`;
+        summaryBody.appendChild(tr);
+      });
+
+      grandTotalEl.textContent = `Grand Total: ${grandTotal.toFixed(2)}`;
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load summary");
+    }
+  }
+
+  // Summary filter buttons
+  todayBtn.addEventListener("click", () => loadSummary("today"));
+  weekBtn.addEventListener("click", () => loadSummary("week"));
+  monthBtn.addEventListener("click", () => loadSummary("month"));
+  summaryCategorySelect.addEventListener('change', () => loadSummary());
+
+
+    // Load Notes
+    async function loadNotes() {
+      const { data, error } = await supabase
+        .from('user_notes')
+        .select('id, content, updated_at')
+        .order('updated_at', { ascending: false });
+
+      if (error) return console.error(error);
+
+      notesList.innerHTML = '';
+      data.forEach(note => {
+        const li = document.createElement('li');
+        li.textContent = `${note.content} (Last updated: ${new Date(note.updated_at).toLocaleString()})`;
+
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = async () => {
+          const newContent = prompt('Edit your note:', note.content);
+          if (!newContent) return;
+          const { error } = await supabase
+            .from('user_notes')
+            .update({ content: newContent })
+            .eq('id', note.id);
+          if (error) return alert(error.message);
+          loadNotes();
+        };
+        li.appendChild(editBtn);
+
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = async () => {
+          const { error } = await supabase.from('user_notes').delete().eq('id', note.id);
+          if (error) return alert(error.message);
+          loadNotes();
+        };
+        li.appendChild(delBtn);
+
+        notesList.appendChild(li);
+      });
+    }
+
+    // Add Note
+    noteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const content = noteInput.value.trim();
+      if (!content) return;
+
+      const { error } = await supabase.from('user_notes').insert([{ content, user_id: user.id }]);
+      if (error) return statusBox.textContent = error.message;
+
+      statusBox.textContent = 'Note added!';
+      noteForm.reset();
+      loadNotes();
+    });
+
+
+
+  // Initial load
+  loadNotes();
+  await loadCategories();
+  await loadExpenses();
+  await loadSummary();
+});
+</script>
+
+</head>
+<body>
+  <h2 id="greeting">Hello!</h2>
+
+  <h1>Expense Dashboard</h1>
+  <button id="logout-btn">Logout</button>
+  <div id="status"></div>
+
+  <h2>Add Expense</h2>
+  <form id="expense-form">
+    <select name="category" id="category-select" required>
+    <option value="" disabled selected>--Select a category--</option>
+    
+    <option value="Food">Food</option>
+    <option value="Transport">Transport</option>
+    <option value="Bills">Bills</option>
+    <option value="Entertainment">Entertainment</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <input type="text" id="new-category" name="new-category" placeholder="Enter new category" style="display:none;">
+
+
+<input type="text" name="description" placeholder="Additional details">
+    <input type="number" name="expense" placeholder="expense" required>
+    <button>Add</button>
+  </form>
+
+  <h2>Your Expenses</h2>
+  <table border="1">
+    <thead><tr><th>category</th><th>expense</th><th>Date</th><th>Description</th><th>Edit</th><th>Delete</th></tr></thead>
+    <tbody id="expenses-body"></tbody>
+  </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>Expense Table</h2>
+
+  <!-- Summary Table Category Filter -->
+<label for="summary-category-select">Filter by Category:</label>
+<select id="summary-category-select">
+  <option value="">All Categories</option>
+  <option value="Food">Food</option>
+  <option value="Transport">Transport</option>
+  <option value="Bills">Bills</option>
+  <option value="Entertainment">Entertainment</option>
+  <option value="Other">Other</option>
+</select>
+
+
+<!-- Filter buttons -->
+<div style="margin-bottom: 1rem;">
+  <button id="today-btn">Today</button>
+  <button id="week-btn">This Week</button>
+  <button id="month-btn">This Month</button>
+</div>
+
+<!-- Summary Table -->
+<table border="1" cellpadding="6" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Amount Spent</th>
+    </tr>
+  </thead>
+  <tbody id="summary-body">
+    <!-- Filled dynamically by script -->
+  </tbody>
+</table>
+
+<!-- Grand Total -->
+<div id="grand-total" style="margin-top:1rem; font-weight:bold;">
+  Grand Total: 0
+</div>
+
+<h1>Your Notes</h1>
+  <div id="status"></div>
+
+  <form id="note-form">
+    <input type="text" id="note-input" placeholder="Write a note" required>
+    <button>Add Note</button>
+  </form>
+
+  <ul id="notes-list"></ul>
+<button onclick="window.location.href = 'chatbot.html'">\chat yo</button>
+
+</body>
+</html>
   const statusBox = document.getElementById('status');
   const tableBody = document.getElementById('expenses-body');
   const categorySelect = document.getElementById('category-select');
@@ -397,3 +808,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 </body>
 </html>
+
