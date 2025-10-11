@@ -301,6 +301,65 @@ if (user) {
       loadNotes();
     });
 
+    // Set a monthly budget
+document.getElementById("set-budget").addEventListener("click", async () => {
+  const limit = parseFloat(document.getElementById("budget-input").value);
+  const user = (await supabase.auth.getUser()).data.user;
+  const month = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
+  if (!limit) return alert("Please enter a valid number!");
+
+  const { error } = await supabase
+    .from("budgets")
+    .upsert([{ user_id: user.id, month, limit_amount: limit }], {
+      onConflict: "user_id,month",
+    });
+
+  if (error) {
+  alert("Error: " + error.message);
+  console.error(error);
+} else {
+  alert("✅ Budget set successfully!");
+}
+
+});
+
+// Check if user exceeded budget
+async function checkBudget() {
+  const user = (await supabase.auth.getUser()).data.user;
+  const month = new Date().toISOString().slice(0, 7);
+
+  const { data: budget } = await supabase
+    .from("budgets")
+    .select("limit_amount")
+    .eq("user_id", user.id)
+    .eq("month", month)
+    .single();
+
+  if (!budget) return;
+
+  const { data: expenses } = await supabase
+    .from("transactions")
+    .select("expense, inserted_at")
+    .eq("user_id", user.id);
+
+  // Calculate total spent this month
+  const total = expenses
+    .filter(e => e.inserted_at.startsWith(month))
+    .reduce((sum, e) => sum + parseFloat(e.expense), 0);
+
+  const status = document.getElementById("budget-status");
+  if (total > budget.limit_amount) {
+    status.textContent = `⚠️ Budget exceeded! You spent ₹${total} (limit: ₹${budget.limit_amount})`;
+    status.style.color = "red";
+  } else {
+    status.textContent = `✅ You’ve spent ₹${total} of ₹${budget.limit_amount}`;
+    status.style.color = "green";
+  }
+}
+
+// Run the check when dashboard loads
+
 
 
   // Initial load
@@ -308,6 +367,7 @@ if (user) {
   await loadCategories();
   await loadExpenses();
   await loadSummary();
+  checkBudget();
 });
 </script>
 
@@ -407,6 +467,14 @@ if (user) {
 
   <ul id="notes-list"></ul>
 <button onclick="window.location.href = 'chatbot.html'">\chat yo</button>
+<!--budget set and alert-->
+<div class="budget-section">
+  <h3>Set Monthly Budget</h3>
+  <input type="number" id="budget-input" placeholder="Enter monthly limit" required />
+  <button id="set-budget">Save Budget</button>
+  <p id="budget-status"></p>
+</div>
+
 
 </body>
 </html>
