@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Transaction Dashboard</title>
+   
+
+  </head>
+  <body>
+<div id="lineChart"></div>
+  <div id="pieChart"></div>
+  <div id="calendar"></div>
+
+
+  <!-- D3 + Supabase + GSAP -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+  // ✅ Initialize Supabase Client
+  const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+
+    // ✅ Fetch transactions for logged-in user
+    async function fetchUserTransactions(userId) {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('category, expense, inserted_at')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        return [];
+      }
+      return data;
+    }
+
+    // ✅ Pie Chart
+    async function createPieChart(userId) {
+      const data = await fetchUserTransactions(userId);
+      const grouped = d3.rollup(data, v => d3.sum(v, d => d.expense), d => d.category);
+      const pieData = Array.from(grouped, ([category, total]) => ({ category, total }));
+
+      const width = 300, height = 300, radius = Math.min(width, height) / 2;
+      const svg = d3.select("#pieChart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+      const color = d3.scaleOrdinal(d3.schemeSet2);
+      const pie = d3.pie().value(d => d.total);
+      const arc = d3.arc().innerRadius(50).outerRadius(radius);
+
+      const arcs = svg.selectAll("arc")
+        .data(pie(pieData))
+        .enter()
+        .append("path")
+        .attr("fill", d => color(d.data.category))
+        .attr("d", arc);
+
+      gsap.from(arcs.nodes(), {
+        duration: 1.2,
+        scale: 0,
+        transformOrigin: "center",
+        stagger: 0.2,
+        ease: "back.out(1.7)"
+      });
+    }
+
+    // ✅ Calendar Heatmap
+    function createCalendar(data) {
+      const dailyTotals = d3.rollup(
+        data,
+        v => d3.sum(v, d => d.expense),
+        d => d.inserted_at.split("T")[0]
+      );
+
+      const color = d3.scaleSequential(d3.interpolateBlues)
+        .domain([0, d3.max(dailyTotals.values())]);
+
+      const svg = d3.select("#calendar")
+        .append("svg")
+        .attr("width", 600)
+        .attr("height", 120);
+
+      let x = 0, y = 0;
+      for (let [date, total] of dailyTotals) {
+        svg.append("rect")
+          .attr("x", x)
+          .attr("y", y)
+          .attr("width", 15)
+          .attr("height", 15)
+          .attr("fill", color(total))
+          .attr("rx", 3);
+
+        x += 18;
+        if (x > 580) { x = 0; y += 18; }
+      }
+
+      gsap.from("rect", {
+        opacity: 0,
+        scale: 0,
+        duration: 0.6,
+        stagger: 0.03,
+        ease: "elastic.out(1, 0.75)"
+      });
+    }
+
+    // ✅ Line Graph
+    function createLineGraph(data) {
+      data.sort((a, b) => new Date(a.inserted_at) - new Date(b.inserted_at));
+      const width = 500, height = 300, margin = 50;
+      const svg = d3.select("#lineChart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      const x = d3.scaleTime()
+        .domain(d3.extent(data, d => new Date(d.inserted_at)))
+        .range([margin, width - margin]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.expense)])
+        .range([height - margin, margin]);
+
+      const line = d3.line()
+        .x(d => x(new Date(d.inserted_at)))
+        .y(d => y(d.expense))
+        .curve(d3.curveMonotoneX);
+
+      const path = svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#5f27cd")
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
+      const totalLength = path.node().getTotalLength();
+      path.attr("stroke-dasharray", totalLength).attr("stroke-dashoffset", totalLength);
+      gsap.to(path.node(), { strokeDashoffset: 0, duration: 2, ease: "power2.out" });
+    }
+
+    // ✅ Main Flow
+    async function main() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        const transactions = await fetchUserTransactions(user.id);
+        createPieChart(user.id);
+        createLineGraph(transactions);
+        createCalendar(transactions);
+      } else {
+        console.log("User not logged in");
+      }
+    }
+
+    main();
+  </script>
+
+</body>
+</html>
