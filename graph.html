@@ -11,7 +11,12 @@
   <body>
 <div id="lineChart"></div>
   <div id="pieChart"></div>
-  <div id="calendar"></div>
+<div id="calendarControls">
+  <button id="prevMonth">Previous</button>
+  <span id="monthYear"></span>
+  <button id="nextMonth">Next</button>
+</div>
+<div id="calendar"></div>
 
 
   <!-- D3 + Supabase + GSAP -->
@@ -40,111 +45,242 @@
     }
 
     // ✅ Pie Chart
-    async function createPieChart(userId) {
-      const data = await fetchUserTransactions(userId);
-      const grouped = d3.rollup(data, v => d3.sum(v, d => d.expense), d => d.category);
-      const pieData = Array.from(grouped, ([category, total]) => ({ category, total }));
+ async function createPieChart(userId) {
+  const data = await fetchUserTransactions(userId);
+  const grouped = d3.rollup(data, v => d3.sum(v, d => d.expense), d => d.category);
+  const pieData = Array.from(grouped, ([category, total]) => ({ category, total }));
 
-      const width = 300, height = 300, radius = Math.min(width, height) / 2;
-      const svg = d3.select("#pieChart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+  const width = 300, height = 300, radius = Math.min(width, height) / 2;
+  const svg = d3.select("#pieChart")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-      const color = d3.scaleOrdinal(d3.schemeSet2);
-      const pie = d3.pie().value(d => d.total);
-      const arc = d3.arc().innerRadius(50).outerRadius(radius);
+  const color = d3.scaleOrdinal(d3.schemeSet2);
+  const pie = d3.pie().value(d => d.total);
+  const arc = d3.arc().innerRadius(50).outerRadius(radius);
 
-      const arcs = svg.selectAll("arc")
-        .data(pie(pieData))
-        .enter()
-        .append("path")
-        .attr("fill", d => color(d.data.category))
-        .attr("d", arc);
+  const arcs = svg.selectAll("arc")
+    .data(pie(pieData))
+    .enter()
+    .append("path")
+    .attr("fill", d => color(d.data.category))
+    .attr("d", arc);
 
-      gsap.from(arcs.nodes(), {
-        duration: 1.2,
-        scale: 0,
-        transformOrigin: "center",
-        stagger: 0.2,
-        ease: "back.out(1.7)"
-      });
-    }
+  // Animate slices
+  gsap.from(arcs.nodes(), {
+    duration: 1.2,
+    scale: 0,
+    transformOrigin: "center",
+    stagger: 0.2,
+    ease: "back.out(1.7)"
+  });
+
+  // ✅ Legend
+  const legend = d3.select("#pieChart")
+    .append("div")
+    .style("margin-top", "10px");
+
+  pieData.forEach(d => {
+    const item = legend.append("div").style("display", "flex").style("align-items", "center").style("margin-bottom", "4px");
+    item.append("div")
+      .style("width", "15px")
+      .style("height", "15px")
+      .style("background-color", color(d.category))
+      .style("margin-right", "5px");
+    item.append("span").text(d.category + ` (${d.total})`);
+  });
+}
+
 
     // ✅ Calendar Heatmap
-    function createCalendar(data) {
-      const dailyTotals = d3.rollup(
-        data,
-        v => d3.sum(v, d => d.expense),
-        d => d.inserted_at.split("T")[0]
-      );
+ function createCalendar(transactions) {
+  let currentDate = new Date(); // Current month
+  const calendarDiv = d3.select("#calendar");
 
-      const color = d3.scaleSequential(d3.interpolateBlues)
-        .domain([0, d3.max(dailyTotals.values())]);
+  function renderCalendar(date) {
+    calendarDiv.html(""); // clear previous
+    
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
 
-      const svg = d3.select("#calendar")
-        .append("svg")
-        .attr("width", 600)
-        .attr("height", 120);
+    d3.select("#monthYear").text(`${firstDay.toLocaleString('default', { month: 'long' })} ${year}`);
 
-      let x = 0, y = 0;
-      for (let [date, total] of dailyTotals) {
-        svg.append("rect")
-          .attr("x", x)
-          .attr("y", y)
-          .attr("width", 15)
-          .attr("height", 15)
-          .attr("fill", color(total))
-          .attr("rx", 3);
-
-        x += 18;
-        if (x > 580) { x = 0; y += 18; }
+     // Prepare daily totals for the month
+    const dailyTotals = new Map();
+    transactions.forEach(tx => {
+      const txDate = new Date(tx.inserted_at);
+      if (txDate.getMonth() === month && txDate.getFullYear() === year) {
+        const dayStr = txDate.toISOString().split("T")[0];
+        dailyTotals.set(dayStr, (dailyTotals.get(dayStr) || 0) + tx.expense);
       }
+    });
 
-      gsap.from("rect", {
-        opacity: 0,
-        scale: 0,
-        duration: 0.6,
-        stagger: 0.03,
-        ease: "elastic.out(1, 0.75)"
-      });
+    const color = d3.scaleSequential(d3.interpolateBlues)
+      .domain([0, d3.max(Array.from(dailyTotals.values())) || 1]);
+
+    const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const weeksInMonth = Math.ceil((firstDay.getDay() + lastDay.getDate()) / 7);
+    const width = 700, cellSize = 60,height =  weeksInMonth * cellSize + 20 ;
+    const svg = calendarDiv.append("svg").attr("width", width).attr("height", height);
+    
+    // Day labels
+    days.forEach((d,i) => {
+      svg.append("text")
+        .attr("x", i*cellSize + 10)
+        .attr("y", 15)
+        .text(d)
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+    });
+
+    let x = firstDay.getDay() * cellSize;
+    let y = 20;
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const dayDate = new Date(year, month, d);
+      const dayStr = dayDate.toISOString().split("T")[0];
+      const total = dailyTotals.get(dayStr) || 0;
+
+      svg.append("rect")
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", cellSize - 2)
+        .attr("height", cellSize - 2)
+        .attr("rx", 4)
+        .attr("fill", color(total));
+
+      svg.append("title") // hover tooltip
+        .text(`${dayStr}: ${total}`);
+
+      svg.append("text") // date label
+        .attr("x", x + 10)
+        .attr("y", y + 20)
+        .text(d)
+        .style("font-size", "12px")
+        .style("fill", total > 0 ? "#fff" : "#000");
+    // Total spent under the date
+        svg.append("text")
+        .attr("x", x + 5)
+        .attr("y", y + 35)
+        .text(total > 0 ? total.toFixed(2) : "")
+        .style("font-size", "10px")
+        .style("fill", total > 0 ? "#fff" : "#000");
+
+
+      x += cellSize;
+      if (dayDate.getDay() === 6) { // new row on Sunday
+        x = 0;
+        y += cellSize;
+      }
     }
+
+    // Animate
+    gsap.from("rect", {
+      opacity: 0,
+      scale: 0,
+      duration: 0.6,
+      stagger: 0.03,
+      ease: "elastic.out(1, 0.75)"
+    });
+  }
+
+  // Initial render
+  renderCalendar(currentDate);
+
+  // Month navigation
+  d3.select("#prevMonth").on("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar(currentDate);
+  });
+  d3.select("#nextMonth").on("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar(currentDate);
+  });
+}
 
     // ✅ Line Graph
-    function createLineGraph(data) {
-      data.sort((a, b) => new Date(a.inserted_at) - new Date(b.inserted_at));
-      const width = 500, height = 300, margin = 50;
-      const svg = d3.select("#lineChart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+   function createLineGraph(data) {
+  data.sort((a, b) => new Date(a.inserted_at) - new Date(b.inserted_at));
 
-      const x = d3.scaleTime()
-        .domain(d3.extent(data, d => new Date(d.inserted_at)))
-        .range([margin, width - margin]);
+  const width = 500, height = 300, margin = 50;
 
-      const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.expense)])
-        .range([height - margin, margin]);
+  const svg = d3.select("#lineChart")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-      const line = d3.line()
-        .x(d => x(new Date(d.inserted_at)))
-        .y(d => y(d.expense))
-        .curve(d3.curveMonotoneX);
+  const x = d3.scaleTime()
+    .domain(d3.extent(data, d => new Date(d.inserted_at)))
+    .range([margin, width - margin]);
 
-      const path = svg.append("path")
-        .datum(data)
-        .attr("fill", "none")
-        .attr("stroke", "#5f27cd")
-        .attr("stroke-width", 2)
-        .attr("d", line);
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.expense)])
+    .range([height - margin, margin]);
 
-      const totalLength = path.node().getTotalLength();
-      path.attr("stroke-dasharray", totalLength).attr("stroke-dashoffset", totalLength);
-      gsap.to(path.node(), { strokeDashoffset: 0, duration: 2, ease: "power2.out" });
-    }
+  // X axis
+  svg.append("g")
+    .attr("transform", `translate(0, ${height - margin})`)
+    .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%d-%b")))
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", 40)
+    .attr("fill", "black")
+    .style("font-size", "12px")
+    .style("text-anchor", "middle")
+    .text("Date");
+
+  // Y axis
+  svg.append("g")
+    .attr("transform", `translate(${margin}, 0)`)
+    .call(d3.axisLeft(y))
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", -40)
+    .attr("fill", "black")
+    .style("font-size", "12px")
+    .style("text-anchor", "middle")
+    .text("Expense");
+
+  // Line
+  const line = d3.line()
+    .x(d => x(new Date(d.inserted_at)))
+    .y(d => y(d.expense))
+    .curve(d3.curveMonotoneX);
+
+  const path = svg.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "#5f27cd")
+    .attr("stroke-width", 2)
+    .attr("d", line);
+
+  const totalLength = path.node().getTotalLength();
+  path.attr("stroke-dasharray", totalLength).attr("stroke-dashoffset", totalLength);
+  gsap.to(path.node(), { strokeDashoffset: 0, duration: 2, ease: "power2.out" });
+
+  // Optional: add dots for each data point
+  svg.selectAll("circle")
+    .data(data)
+    .enter()
+    .append("circle")
+    .attr("cx", d => x(new Date(d.inserted_at)))
+    .attr("cy", d => y(d.expense))
+    .attr("r", 4)
+    .attr("fill", "#5f27cd")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1)
+    .style("opacity", 0)
+    .transition()
+    .duration(1000)
+    .style("opacity", 1);
+}
+
 
     // ✅ Main Flow
     async function main() {
