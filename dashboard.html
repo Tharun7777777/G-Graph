@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
   <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
-    const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
+  const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+
+   
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -177,6 +180,8 @@ if (user) {
     await loadCategories();
     await loadExpenses();
     await loadSummary();
+
+    
   });
 
   // Show/hide new category input
@@ -368,116 +373,121 @@ async function checkBudget() {
   await loadExpenses();
   await loadSummary();
   checkBudget();
+
+  
 });
 </script>
 
 </head>
 <body>
-  <h2 id="greeting">Hello!</h2>
 
-  <h1>Expense Dashboard</h1>
-  <button id="logout-btn">Logout</button>
-  <div id="status"></div>
+  
+  <div class="dashboard-layout">
 
-  <h2>Add Expense</h2>
-  <form id="expense-form">
-    <select name="category" id="category-select" required>
-    <option value="" disabled selected>--Select a category--</option>
-    
-    <option value="Food">Food</option>
-    <option value="Transport">Transport</option>
-    <option value="Bills">Bills</option>
-    <option value="Entertainment">Entertainment</option>
-    <option value="Other">Other</option>
-  </select>
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <h2>Expense Dashboard</h2>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html" class="active">Overview</a></li>
+          <li><a href="graph.html">Analytics</a></li>
+          <li><a href="chatbot.html">Chatbot</a></li>
+        </ul>
+      </nav>
+      <button id="logout-btn">Logout</button>
+    </aside>
 
-  <input type="text" id="new-category" name="new-category" placeholder="Enter new category" style="display:none;">
+    <!-- MAIN CENTER CONTENT -->
+    <main class="main-section">
+      <!-- HEADER -->
+      <header class="header">
+        <h2 id="greeting">Hello!</h2>
+        <p id="status"></p>
+      </header>
 
+      <!-- OVERVIEW SECTION -->
+      <section class="overview-row">
+        <div class="card" id="budget-card">
+          <h3>Budget</h3>
+          <p id="budget-status"></p>
+        </div>
 
-<input type="text" name="description" placeholder="Additional details">
-    <input type="number" name="expense" placeholder="expense" required>
-    <button>Add</button>
-  </form>
+        <div class="card" id="grandtotal-card">
+          <h3>Grand Total</h3>
+          <p id="grand-total">0</p>
+        </div>
+      </section>
 
-  <h2>Your Expenses</h2>
-  <table border="1">
-    <thead><tr><th>category</th><th>expense</th><th>Date</th><th>Description</th><th>Edit</th><th>Delete</th></tr></thead>
-    <tbody id="expenses-body"></tbody>
-  </table>
+      <!-- EXPENSE ENTRY SECTION -->
+      <section class="expense-row">
+        <div class="card" id="add-expense">
+          <h3>Add Expense</h3>
+          <form id="expense-form">
+            <select name="category" id="category-select" required></select>
+            <input type="text" id="new-category" name="new-category" placeholder="New category" style="display:none;">
+            <input type="text" name="description" placeholder="Description">
+            <input type="number" name="expense" placeholder="Expense" required>
+            <button>Add</button>
+          </form>
+        </div>
 
+        <div class="card" id="summary-card">
+          <h3>Expense Summary</h3>
+          <div class="filters">
+            <select id="summary-category-select"></select>
+            <button id="today-btn">Today</button>
+            <button id="week-btn">This Week</button>
+            <button id="month-btn">This Month</button>
+          </div>
+          <table  border="1" cellspacing="4" cellpadding="4">
+            <thead>
+              <tr><th>Category</th><th>Amount</th></tr>
+            </thead>
+            <tbody id="summary-body"></tbody>
+          </table>
+        </div>
+      </section>
 
+      <!-- EXPENSE TABLE -->
+      <section class="expense-list-row">
+        <div class="card" id="expense-list">
+          <h3>Your Expenses</h3>
+          <table  border="1" cellspacing="4" cellpadding="4">
+            <thead>
+              <tr><th>Category</th><th>Expense</th><th>Date</th><th>Description</th><th>Edit</th><th>Delete</th></tr>
+            </thead>
+            <tbody id="expenses-body"></tbody>
+          </table>
+        </div>
+      </section>
+      
+    </main>
 
+    <!-- RIGHT PANEL -->
+    <aside class="right-panel">
+      <section class="notifications">
+        <!-- NOTES + BUDGET SETTINGS -->
+        <div class="card" id="notes-card">
+          <h3>Your Notes</h3>
+          <form id="note-form">
+            <input type="text" id="note-input" placeholder="Write a note" required>
+            <button>Add</button>
+          </form>
+          <ul id="notes-list"></ul>
+        </div>
 
+        <div class="card" id="budget-set">
+          <h3>Set Monthly Budget</h3>
+          <input type="number" id="budget-input" placeholder="Enter monthly limit" required>
+          <button id="set-budget">Save Budget</button>
+        </div>
+      </section>
+     
+    </aside>
 
-
-
-
-
-
-
-
-
-
-  <h2>Expense Table</h2>
-
-  <!-- Summary Table Category Filter -->
-<label for="summary-category-select">Filter by Category:</label>
-<select id="summary-category-select">
-  <option value="">All Categories</option>
-  <option value="Food">Food</option>
-  <option value="Transport">Transport</option>
-  <option value="Bills">Bills</option>
-  <option value="Entertainment">Entertainment</option>
-  <option value="Other">Other</option>
-</select>
-
-
-<!-- Filter buttons -->
-<div style="margin-bottom: 1rem;">
-  <button id="today-btn">Today</button>
-  <button id="week-btn">This Week</button>
-  <button id="month-btn">This Month</button>
-</div>
-
-<!-- Summary Table -->
-<table border="1" cellpadding="6" cellspacing="0">
-  <thead>
-    <tr>
-      <th>Category</th>
-      <th>Amount Spent</th>
-    </tr>
-  </thead>
-  <tbody id="summary-body">
-    <!-- Filled dynamically by script -->
-  </tbody>
-</table>
-
-<!-- Grand Total -->
-<div id="grand-total" style="margin-top:1rem; font-weight:bold;">
-  Grand Total: 0
-</div>
-
-<h1>Your Notes</h1>
-  <div id="status"></div>
-
-  <form id="note-form">
-    <input type="text" id="note-input" placeholder="Write a note" required>
-    <button>Add Note</button>
-  </form>
-
-  <ul id="notes-list"></ul>
-<button onclick="window.location.href = 'chatbot.html'">\chat yo</button>
-  <button onclick="window.location.href = 'graph.html'">\graph yo</button>
-
-<!--budget set and alert-->
-<div class="budget-section">
-  <h3>Set Monthly Budget</h3>
-  <input type="number" id="budget-input" placeholder="Enter monthly limit" required />
-  <button id="set-budget">Save Budget</button>
-  <p id="budget-status"></p>
-</div>
+  </div>
 
 
 </body>
-</html>
 
+</html>
