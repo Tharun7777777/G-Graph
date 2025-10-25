@@ -7,33 +7,64 @@
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: #0f0f0f;
-  color: #eee;
+  color: #111;
   display: flex;
   min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+
+  /* 🔹 Use your uploaded image as background */
+  background: url('background2.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* 🔹 Soft overlay for subtle diffusion */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(10px);
+  z-index: 0;
+}
+
+.dashboard-layout,
+.sidebar,
+.main-section,
+.right-panel {
+  position: relative;
+  z-index: 1;
 }
 
 /* ======= GRID CONTAINER ======= */
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 220px 1fr 300px;
-  grid-template-rows: auto;
+  grid-template-columns: 250px 1fr 320px;
   width: 100%;
   height: 100vh;
+  gap: 1rem;
 }
 
 /* ======= SIDEBAR ======= */
 .sidebar {
-  background-color: #1a1a1a;
-  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(25px);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-right: 1px solid #222;
+  border-radius: 0 24px 24px 0;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar h2 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111;
   margin-bottom: 1.5rem;
 }
 
@@ -45,42 +76,69 @@ body {
 }
 
 .sidebar nav a {
-  color: #aaa;
+  color: #555;
   text-decoration: none;
   font-size: 0.95rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  font-weight: 500;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
   display: block;
 }
 
 .sidebar nav a.active,
 .sidebar nav a:hover {
+  background: #111;
   color: #fff;
-  background-color: #333;
 }
 
 .logout-btn,
 .sidebar button {
   margin-top: 1.5rem;
-  padding: 0.5rem;
-  background-color: #333;
+  padding: 0.6rem;
+  background: #111;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-/* ======= MAIN SECTION ======= */
+.logout-btn:hover,
+.sidebar button:hover {
+  background: #000;
+}
+
+/* ======= MAIN SECTION (Transparent) ======= */
 .main-section {
-  padding: 1.5rem;
+  padding: 2rem;
   overflow-y: auto;
+  background: transparent;          /* 🔹 Fully transparent */
+  backdrop-filter: none;            /* remove frosted blur */
+  border-radius: 24px;
+  margin: 1rem 0;
+  box-shadow: none;                 /* no shadow */
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.header button {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
 }
 
 /* ======= DASHBOARD GRID ======= */
@@ -89,77 +147,106 @@ body {
 .expense-list-row,
 .bottom-row {
   display: grid;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-/* Two-column rows */
 .overview-row,
 .expense-row,
 .bottom-row {
   grid-template-columns: repeat(2, 1fr);
 }
 
-/* Single full-width section */
 .expense-list-row {
   grid-template-columns: 1fr;
 }
 
 /* ======= CARDS ======= */
+
 .card {
-  background-color: #1c1c1c;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
 }
 
 .card h3 {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   font-size: 1rem;
+  font-weight: 600;
 }
+/* ======= TABLES (Enhanced Transparent Style) ======= */
+
 
 .card table {
   width: 100%;
   border-collapse: collapse;
+  background: transparent;               /* full transparency */
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .card table th,
 .card table td {
-  border-bottom: 1px solid #333;
-  padding: 0.5rem;
+  padding: 0.7rem 0.9rem;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: #111;
+  background: transparent;               /* ✅ truly transparent cells */
+  backdrop-filter: none;                 /* remove glass blur */
 }
 
 .card table th {
-  color: #bbb;
+  font-weight: 600;
+  color: #000;
+  background: rgba(0, 0, 0, 0.05);       /* subtle contrast for header */
 }
 
-/* ======= RIGHT PANEL ======= */
+.card table tr:hover td {
+  background: rgba(0, 0, 0, 0.05);       /* soft hover highlight */
+}
+
+
+
+
+
+/* ======= RIGHT PANEL (Transparent) ======= */
 .right-panel {
-  background-color: #161616;
-  padding: 1rem;
-  border-left: 1px solid #222;
+  background: transparent;          /* 🔹 Fully transparent */
+  backdrop-filter: none;
+  border-left: none;
+  box-shadow: none;
+  padding: 2rem;
+  border-radius: 24px 0 0 24px;
   overflow-y: auto;
 }
 
 .right-panel section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .right-panel h3 {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   font-size: 1rem;
+  font-weight: 600;
+  color: #111;
 }
 
 .right-panel ul {
   list-style: none;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: #333;
 }
 
 .right-panel li {
-  margin-bottom: 0.4rem;
-  color: #ccc;
+  margin-bottom: 1rem;
 }
 
 /* ======= FORMS ======= */
@@ -172,41 +259,59 @@ form {
 input,
 select,
 button {
-  padding: 0.5rem;
-  border: 1px solid #333;
-  border-radius: 6px;
-  background-color: #111;
-  color: #fff;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #111;
   font-size: 0.9rem;
 }
 
 button {
-  background-color: #333;
+  background: #111;
+  color: #fff;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  background-color: #444;
+  background: #000;
 }
 
-/* ======= SCROLLBAR STYLE ======= */
+/* ======= SCROLLBAR ======= */
 ::-webkit-scrollbar {
   width: 8px;
 }
-
 ::-webkit-scrollbar-thumb {
-  background-color: #333;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }
 
-/* ======= RESPONSIVE DESIGN ======= */
+/* ======= RESPONSIVE ======= */
 @media (max-width: 1000px) {
   .dashboard-layout {
-    grid-template-columns: 200px 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+  }
+
+  .main-section {
+    order: 2;
+    margin: 1rem;
   }
 
   .right-panel {
-    display: none;
+    order: 3;
+    border-left: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .overview-row,
@@ -216,34 +321,186 @@ button:hover {
   }
 }
 
-@media (max-width: 700px) {
-  body {
-    flex-direction: column;
-  }
+#notes-card,
+#budget-set {
+  padding: 1.2rem;
+  margin: 0.8rem;
+  border-radius: 20px;
+}
 
-  .dashboard-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-  }
+/* ===== Notes Section (Tighter, Clean Look) ===== */
+#notes-card {
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid #000;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  backdrop-filter: blur(6px);
+  box-shadow: none;
+}
 
-  .sidebar {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    border-right: none;
-    border-bottom: 1px solid #222;
-  }
+#note-form {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
 
-  .sidebar nav ul {
-    flex-direction: row;
-    gap: 1rem;
-  }
+#note-input {
+  flex: 1;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.6);
+  color: #111;
+}
 
-  .main-section {
-    padding: 1rem;
-  }
+#notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
 
-  .card {
-    padding: 0.75rem;
-  }
+#notes-list li {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: #111;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+#notes-list li:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+#notes-list li button {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  margin-left: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#notes-list li button:hover {
+  background: #000;
+}
+
+/* Scrollbar styling */
+#notes-list::-webkit-scrollbar {
+  width: 6px;
+}
+#notes-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+
+/* ===== Transparent Summary & Expense Cards with Scrollable Tables ===== */
+
+#summary-card,
+#expense-list {
+  background: transparent !important;
+  border: 2px solid #000 !important;
+  border-radius: 12px;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 420px; /* adjust as needed for card height */
+  overflow: hidden; /* keeps header visible, table scrolls */
+}
+
+/* Card Headings */
+#summary-card h3,
+#expense-list h3 {
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+
+/* Table inside cards */
+#summary-card table,
+#expense-list table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+/* ✅ Scroll fix */
+#summary-card tbody,
+#expense-list tbody {
+  display: block;
+  max-height: 320px; /* defines scrollable area */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Keep table header fixed width */
+#summary-card thead,
+#expense-list thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+#summary-card tbody tr,
+#expense-list tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Remove vertical borders, keep horizontal */
+#summary-card th,
+#summary-card td,
+#expense-list th,
+#expense-list td {
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  border-left: none;
+  border-right: none;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  background: transparent;
+  color: #000;
+  font-size: 0.9rem;
+}
+
+
+/* Table header style */
+#summary-card th,
+#expense-list th {
+  font-weight: 600;
+}
+
+/* Hover effect */
+#summary-card tbody tr:hover td,
+#expense-list tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Scrollbar styling */
+#summary-card tbody::-webkit-scrollbar,
+#expense-list tbody::-webkit-scrollbar {
+  width: 8px;
+}
+#summary-card tbody::-webkit-scrollbar-thumb,
+#expense-list tbody::-webkit-scrollbar-thumb {
+  border-radius: 6px;
 }
