@@ -2,63 +2,249 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login / Signup</title>
+  <title>Expense Manager | Login / Signup</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      width: 80%;
+      max-width: 1000px;
+      height: 75vh;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      position: relative;
+      color: #fff;
+    }
+
+    .left-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .right-column {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .right-column video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .header {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease;
+    }
+
+    .header.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    form {
+      width: 80%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      transition: opacity 0.5s ease;
+      animation: fadeIn 0.7s ease forwards;
+    }
+
+    form.active {
+      display: flex;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #00bfff;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #009fd1;
+    }
+
+    .switch-buttons {
+      margin-top: 25px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .switch-buttons button {
+      background: transparent;
+      border: 1px solid #fff;
+      color: #fff;
+    }
+
+    .switch-buttons button:hover {
+      background: #00bfff;
+    }
+
+    #status {
+      margin-top: 1rem;
+      color: #ffb3b3;
+      min-height: 1.2em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
-    const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+    // ✅ Initialize Supabase
+    const supabase = createClient(
+      'https://djnctdrtmfamvkidgwhx.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8'
+    )
 
-    // Redirect if already logged in
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) window.location.href = 'dashboard.html'
+    // ✅ Wait for DOM before attaching events
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) window.location.href = 'dashboard.html'
 
-    // Signup
-    document.getElementById('signup-form').addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const email = e.target.email.value
-      const password = e.target.password.value
-      const username=e.target.usernameInput.value
+      const signupForm = document.getElementById('signup-form')
+      const loginForm = document.getElementById('login-form')
+      const status = document.getElementById('status')
+
+      // Signup
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const email = e.target.email.value
+        const password = e.target.password.value
+        const username = e.target.usernameInput.value
+
         const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username: username }   // ✅ correctly stores in user_metadata
-      }
-    })
+          email,
+          password,
+          options: { data: { username } }
+        })
 
-    document.getElementById('status').textContent = error
-      ? error.message
-      : 'Check your email to confirm your account!'
-  })
+        status.textContent = error
+          ? error.message
+          : '✅ Check your email to confirm your account!'
+      })
 
-    // Login
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const email = e.target.email.value
-      const password = e.target.password.value
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) document.getElementById('status').textContent = error.message
-      else window.location.href = 'dashboard.html'
+      // Login
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const email = e.target.email.value
+        const password = e.target.password.value
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) status.textContent = error.message
+        else window.location.href = 'dashboard.html'
+      })
     })
   </script>
 </head>
+
 <body>
-  <h1>Welcome to Expense Manager</h1>
-  <div id="status"></div>
+  <div class="container">
+    <!-- Left Column -->
+    <div class="left-column">
+      <h1>Welcome to Expense Manager</h1>
+      <h2 class="header active" id="header">Welcome</h2>
 
-  <h2>Sign Up</h2>
-  <form id="signup-form">
-    <input type="text" name="usernameInput" placeholder="Enter your username" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button>Sign Up</button>
-  </form>
+      <!-- Signup Form -->
+      <form id="signup-form">
+        <input type="text" name="usernameInput" placeholder="Username" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Sign Up</button>
+      </form>
 
-  <h2>Login</h2>
-  <form id="login-form">
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button>Login</button>
-  </form>
+      <!-- Login Form -->
+      <form id="login-form">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+
+      <div id="status"></div>
+
+      <div class="switch-buttons">
+        <button onclick="showForm('login')">Login</button>
+        <button onclick="showForm('signup')">Signup</button>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="right-column">
+      <video autoplay muted loop playsinline>
+        <source src="back-vid.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+
+  <script>
+    const header = document.getElementById('header');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+
+    function showForm(type) {
+      loginForm.classList.remove('active');
+      signupForm.classList.remove('active');
+      header.classList.remove('active');
+
+      if (type === 'login') {
+        header.textContent = 'Login';
+        loginForm.classList.add('active');
+      } else if (type === 'signup') {
+        header.textContent = 'Signup';
+        signupForm.classList.add('active');
+      } 
+      setTimeout(() => header.classList.add('active'), 100);
+    }
+  </script>
 </body>
 </html>
