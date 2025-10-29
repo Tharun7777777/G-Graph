@@ -504,3 +504,115 @@ button:hover {
 #expense-list tbody::-webkit-scrollbar-thumb {
   border-radius: 6px;
 }
+
+/* ===== CHART & CALENDAR SECTION ===== */
+
+/* Wrapper to hold all charts neatly */
+#charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 2rem;
+  padding: 1.5rem;
+  width: 100%;
+  justify-items: center;
+  align-items: start;
+}
+
+/* General chart container style */
+#pieChart,
+#lineChart,
+#calendar {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 1rem;
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+/* Specific sizing for better proportion */
+#pieChart {
+  max-width: 350px;
+  justify-self: center;
+}
+
+#lineChart {
+  max-width: 600px;
+  margin-top: 1rem;
+   
+}
+#lineCard {
+   margin-top: -4rem;
+ margin-left: 18rem;
+}
+#pieCard {
+ margin-left: 30rem;
+}
+#calendar {
+  max-width: 700px;
+}
+/* ======= Unified Calendar Card ======= */
+#calendarCard {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  padding: 1rem;
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-self: center;
+  margin-top: -21rem;
+  margin-left: 2rem;
+}
+
+/* Controls inside the card */
+#calendarCard #calendarControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+}
+
+#calendarCard #calendarControls button {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+#calendarCard #calendarControls button:hover {
+  background: #000;
+  transform: translateY(-1px);
+}
+
+#calendarCard #monthYear {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  color: #111;
+  font-size: 1rem;
+}
+
+/* Calendar SVG container */
+#calendarCard #calendar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
