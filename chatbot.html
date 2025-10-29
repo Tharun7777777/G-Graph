@@ -4,42 +4,289 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>G-Graph Chatbot</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; }
-    #chat { border: 1px solid #ccc; padding: 1rem; height: 600px; overflow-y: auto; }
-    .msg { margin: .5rem 0; }
-    .user { color: blue; }
-    .bot  { color: green; }
-    form { display: flex; margin-top: 1rem; }
-    input { flex: 1; padding: .5rem; }
-    button { padding: .5rem 1rem; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+   html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Work Sans', sans-serif;
+  background: #000;
+  color: #fff;
+  background-image: url(bg2.jpg);
+  background-size: cover;
+}
+
+header, h1, h2, h3 {
+  font-family: 'Clash Display', sans-serif;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+
+    /* === CHAT WRAPPER === */
+    .chat-container {
+      position: relative;
+      max-width: 850px;
+      height: 90vh;
+      margin: 3vh auto;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(15px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* === INNER VIDEO === */
+    #chat-bg-video {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.5;
+      z-index: 0;
+    }
+
+    /* === HEADER === */
+    header {
+      text-align: center;
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* === CHAT AREA === */
+    #chat {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .msg {
+      margin: 0.6rem 0;
+      max-width: 75%;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      line-height: 1.4;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border-left: 3px solid #fff;
+      box-shadow: 4px 0 10px rgba(255,255,255,0.2);
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.393);
+      color: #0d0c0c;
+      border-right: 3px solid #edf3f5;
+      box-shadow: -4px 0 10px rgba(217, 222, 223, 0.2);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === FORM === */
+    form {
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      z-index: 1;
+    }
+
+    input {
+      flex: 1;
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 1rem;
+      border-right: 1px solid rgba(34, 33, 33, 0.475);
+    }
+
+    button {
+      padding: 1rem 2rem;
+      background: linear-gradient(90deg, #cdd4db, #757676);
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      color: #000;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      filter: brightness(1.2);
+      box-shadow: 0 0 10px #c7d7da;
+    }
+
+    #chat::-webkit-scrollbar { width: 8px; }
+    #chat::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
-<script type="module">  
-import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
-  const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
- // Logout
- 
-document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('logout-btn').addEventListener('click', async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) return alert('Logout failed');
-    window.location.href = 'index.html';
-  });});
+
+  <div class="chat-container">
+    <video autoplay muted loop id="chat-bg-video">
+      <source src="chat-bg5.mp4" type="video/mp4">
+    </video>
+
+    <header>G-Graph Chatbot</header>
+
+    <div id="chat"></div>
+
+    <form id="chat-form">
+      <input type="text" id="user-input" placeholder="Ask about your expenses..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script type="module" src="./chatbot.js">
+    
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("user-input");
+
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `msg ${sender}`;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+
+      gsap.from(div, {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        ease: "power2.out"
+      });
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(text, "user");
+      input.value = "";
+
+      setTimeout(() => {
+        addMessage("I'm processing your request about: " + text, "bot");
+      }, 700);
+    });
+
+    gsap.from(".chat-container", {
+      opacity: 0,
+      scale: 0.9,
+      y: 50,
+      duration: 1,
+      ease: "power3.out"
+    });
+
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script>
+  window.addEventListener("load", () => {
+    // === Initial Page Fade-In ===
+    gsap.from("body", {
+      opacity: 0,
+      duration: 1.2,
+      ease: "power2.out"
+    });
+
+    // === Chat Container Pop & Glow ===
+    gsap.fromTo(".chat-container",
+      { opacity: 0, y: 60, scale: 0.95, filter: "blur(10px)" },
+      { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 1.5, ease: "power4.out" }
+    );
+
+    // === Header Glow Sweep ===
+    gsap.from("header", {
+      opacity: 0,
+      y: -30,
+      duration: 1.2,
+      ease: "power3.out",
+      delay: 0.3
+    });
+    gsap.to("header", {
+      boxShadow: "0 0 20px  rgba(228, 221, 221, 0.826);",
+      repeat: -1,
+      yoyo: true,
+      duration: 2,
+      ease: "sine.inOut",
+      delay: 1.2
+    });
+
+    // === Input + Button Slide-in ===
+    gsap.from("#chat-form input", {
+      opacity: 0,
+     
+      duration: 0,
+      ease: "power2.out",
+      delay: 1.3
+    });
+    gsap.from("#chat-form button", {
+      opacity: 1,
+      
+      duration: 1,
+      ease: "power2.out",
+      delay: 1.5
+    });
+
+    // === Floating Glow Effect ===
+   // Continuous soft white glow effect for chatbot container
+gsap.to(".chat-container", {
+  boxShadow: "0 0 25px rgba(255,255,255,0.35)",
+  repeat: -1,
+  yoyo: true,
+  duration: 2.5,
+  ease: "sine.inOut"
+});
+
+
+    // === Chat background pulse ===
+    gsap.to("#chat-bg-video, #chat", {
+      opacity: 0.9,
+      duration: 4,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+  });
 </script>
 
-<button id="logout-btn">Logout</button>
-  <h1>G-Graph Chatbot</h1>
 
-  <div id="chat"></div>
-
-  <form id="chat-form">
-    <input type="text" id="user-input" placeholder="Ask about your expenses..." required />
-    <button type="submit">Send</button>
-  </form>
-
-  <script type="module" src="./chatbot.js"></script>
 </body>
 </html>
