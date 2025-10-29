@@ -5,18 +5,158 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Transaction Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css" />
+
+  <!-- GSAP Core -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+
+<!-- ScrollTrigger Plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+
+  <script type="module">
+
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+
+
+
+   document.addEventListener("DOMContentLoaded", () => {
+
+
+
+
+
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const isMobile = window.innerWidth <= 700;
+
+  
+
+  // Ensure consistent 3D space for all cards
+  gsap.set(".card", {
+    transformPerspective: 1200,
+    transformOrigin: "center center",
+    transformStyle: "preserve-3d",
+  });
+
+  // ===== 🎬 Main 3D Entrance Animation =====
+  const cards = gsap.utils.toArray(".card");
+  const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+  cards.forEach((card, i) => {
+    const fromLeft = i % 2 === 0; // alternate rotation direction
+    tl.from(card, {
+      opacity: 0,
+      y: isMobile ? 30 : 50,
+      rotateY: fromLeft ? -55 : 55,
+      scale: 0.92,
+      duration: 1.2,
+      delay: i * 0.1,
+      ease: "power3.out",
+      clearProps: "transform",
+    }, i * 0.1);
+  });
+
+  // ===== 🌫️ Gentle Floating Effect =====
+  gsap.utils.toArray(".card").forEach((card, i) => {
+    gsap.to(card, {
+      y: "+=3",
+      duration: 3.5 + Math.random(),
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+      delay: i * 0.2,
+    });
+  });
+
+  // ===== 🌊 Sidebar & Header Smooth Entrance =====
+  gsap.from(".sidebar, .dashboard-title, .header", {
+    opacity: 0,
+    x: -40,
+    duration: 1,
+    ease: "power2.out",
+    delay: 0.3,
+  });
+
+    // ===== 🖱️ Hover Lift Effect =====
+  if (!isMobile) {
+    document.querySelectorAll(".card").forEach(card => {
+      card.addEventListener("mouseenter", () => {
+        gsap.to(card, {
+          scale: 1.05,
+          rotateY: 0,
+          duration: 0.3,
+          ease: "power2.out",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.18)",
+        });
+      });
+      card.addEventListener("mouseleave", () => {
+        gsap.to(card, {
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.inOut",
+          boxShadow: "none",
+        });
+      });
+    });
+  }
+
+  // ===== 👋 Greeting Animation =====
+  gsap.from("#greeting", {
+    opacity: 0,
+    y: -25,
+    duration: 1.1,
+    ease: "back.out(1.6)",
+  });
+
+
+
+
+});
    
 
-  </head>
-  <body>
-<div id="lineChart"></div>
-  <div id="pieChart"></div>
-<div id="calendarControls">
-  <button id="prevMonth">Previous</button>
-  <span id="monthYear"></span>
-  <button id="nextMonth">Next</button>
+</script>
+
+</head>
+<body>
+
+ <div class="dashboard-layout">
+
+
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <h2>Expense Dashboard</h2>
+      <nav>
+        <ul>
+          <li><a href="dashboard.html" >Overview</a></li>
+          <li><a href="graph.html" class="active">Analytics</a></li>
+          <li><a href="chatbot.html">Chatbot</a></li>
+        </ul>
+      </nav>
+      <button id="logout-btn">Logout</button>
+    </aside>
+
+
+
+
+
+
+
+
+<div id="charts-section">
+  <div class="card" id="lineCard"><div id="lineChart"></div></div>
+  <div class="card" id="pieCard"><div id="pieChart"></div></div>
+
+<div id="calendarCard" class="card">
+  <div id="calendarControls">
+    <button id="prevMonth">Previous</button>
+    <span id="monthYear"></span>
+    <button id="nextMonth">Next</button>
+  </div>
+  <div id="calendar"></div>
 </div>
-<div id="calendar"></div>
+
 
 
   <!-- D3 + Supabase + GSAP -->
@@ -29,6 +169,22 @@
 
   // ✅ Initialize Supabase Client
   const supabase = createClient('https://djnctdrtmfamvkidgwhx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8')
+
+  // ✅ Redirect if not logged in
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  window.location.href = 'index.html';
+} else {
+  const userId = user.id;
+
+  // ✅ Logout button functionality
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return alert('Logout failed');
+    window.location.href = 'index.html';
+  });
+}
+
 
     // ✅ Fetch transactions for logged-in user
     async function fetchUserTransactions(userId) {
@@ -120,8 +276,9 @@
       }
     });
 
-    const color = d3.scaleSequential(d3.interpolateBlues)
-      .domain([0, d3.max(Array.from(dailyTotals.values())) || 1]);
+ const color = d3.scaleSequential(d3.interpolateGreys)
+  .domain([0, d3.max(Array.from(dailyTotals.values())) || 1]);
+
 
     const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
     const weeksInMonth = Math.ceil((firstDay.getDay() + lastDay.getDate()) / 7);
@@ -162,7 +319,7 @@
         .attr("y", y + 20)
         .text(d)
         .style("font-size", "12px")
-        .style("fill", total > 0 ? "#fff" : "#000");
+        .style("fill", total > 0 ? "#FFF" : "#000");
     // Total spent under the date
         svg.append("text")
         .attr("x", x + 5)
@@ -256,7 +413,7 @@
   const path = svg.append("path")
     .datum(data)
     .attr("fill", "none")
-    .attr("stroke", "#5f27cd")
+    .attr("stroke", "black")
     .attr("stroke-width", 2)
     .attr("d", line);
 
@@ -272,8 +429,8 @@
     .attr("cx", d => x(new Date(d.inserted_at)))
     .attr("cy", d => y(d.expense))
     .attr("r", 4)
-    .attr("fill", "#5f27cd")
-    .attr("stroke", "#fff")
+    .attr("fill", "white")
+    .attr("stroke", "black")
     .attr("stroke-width", 1)
     .style("opacity", 0)
     .transition()
@@ -297,6 +454,6 @@
 
     main();
   </script>
-
+ </div>
 </body>
 </html>
