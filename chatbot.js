@@ -1,8 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 const SUPABASE_URL = "https://djnctdrtmfamvkidgwhx.supabase.co";
-const SUPABASE_ANON_KEY = "AIzaSyDkpCjMn-nip8amGgp09LSPpgCcoBNebG8";
-const GEMINI_API_KEY = "AIzaSyA_ex68LduETbMJIQB9n8Os_jirEbcZiYU";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqbmN0ZHJ0bWZhbXZraWRnd2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDg2OTQsImV4cCI6MjA3MzUyNDY5NH0.Yf8155b0oxhDu62Otx9ZIqr9VV2NcHsZZ45SWJBXZY8";
+const GEMINI_API_KEY = "AIzaSyDkpCjMn-nip8amGgp09LSPpgCcoBNebG8";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
