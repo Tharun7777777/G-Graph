@@ -20,10 +20,6 @@
 
   <script type="module">
 
-    // 🔒 Prevent dashboard from hijacking magic-link login
-if (window.location.pathname.includes("index.html")) {
-  throw new Error("Login page – stop dashboard logic");
-}
 
 
   import { createClient } from 'https://esm.sh/@supabase/supabase-js'
@@ -727,6 +723,7 @@ async function checkBudget() {
 </body>
 
 </html>
+
 
 
 
