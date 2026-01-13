@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Logging in…</title>
-  <script>
-    // Supabase sends tokens in URL hash
-    if (window.location.hash.includes("access_token")) {
-      // Redirect to Android app
-      window.location.href = "smsapp://login" + window.location.hash;
-    } else {
-      document.body.innerText = "No token found";
-    }
-  </script>
+  <title>Login Redirect</title>
 </head>
 <body>
-Logging you into the app…
+  <h3>Signing you in…</h3>
+
+  <script>
+    // Get hash params
+    const hash = window.location.hash;
+
+    if (hash && hash.includes("access_token")) {
+      // 🔥 Redirect to Android app
+      window.location.href = "smsapp://login" + hash;
+    } else {
+      // ❌ No token → DO NOT redirect to dashboard
+      document.body.innerHTML = "<h3>Invalid or expired link</h3>";
+    }
+  </script>
 </body>
 </html>
