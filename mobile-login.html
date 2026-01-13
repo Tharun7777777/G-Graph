@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mobile Login</title>
+  <meta charset="UTF-8">
+  <title>Redirecting…</title>
 </head>
 <body>
-  <h3>Opening app…</h3>
-
-  <script>
-    // DO NOT load Supabase here
-    // Just forward token to Android
-
-    if (window.location.hash.includes("access_token")) {
-      window.location.href = "smsapp://login" + window.location.hash;
-    } else {
-      document.body.innerHTML = "<h3>Invalid or expired login link</h3>";
-    }
-  </script>
+<script>
+  // Forward Supabase tokens to Android app
+  const hash = window.location.hash;
+  if (hash.includes("access_token")) {
+    window.location.href = "smsapp://login" + hash;
+  } else {
+    document.body.innerText = "Invalid login link";
+  }
+</script>
 </body>
 </html>
