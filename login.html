@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Logging in…</title>
+  <script>
+    // Supabase sends tokens in URL hash
+    if (window.location.hash.includes("access_token")) {
+      // Redirect to Android app
+      window.location.href = "smsapp://login" + window.location.hash;
+    } else {
+      document.body.innerText = "No token found";
+    }
+  </script>
+</head>
+<body>
+Logging you into the app…
+</body>
+</html>
