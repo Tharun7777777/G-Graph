@@ -21,7 +21,7 @@
   <script type="module">
 
     // 🔒 Prevent dashboard from hijacking magic-link login
-if (window.location.pathname.includes("login.html")) {
+if (window.location.pathname.includes("index.html")) {
   throw new Error("Login page – stop dashboard logic");
 }
 
@@ -727,5 +727,6 @@ async function checkBudget() {
 </body>
 
 </html>
+
 
 
