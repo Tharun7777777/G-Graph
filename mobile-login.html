@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>Redirecting…</title>
-</head>
 <body>
 <script>
-  // Forward Supabase tokens to Android app
-  const hash = window.location.hash;
-  if (hash.includes("access_token")) {
-    window.location.href = "smsapp://login" + hash;
+  if (window.location.hash.includes("access_token")) {
+    window.location.href =
+      "smsapp://login" + window.location.hash;
   } else {
-    document.body.innerText = "Invalid login link";
+    document.body.innerText = "Waiting for login...";
   }
 </script>
 </body>
