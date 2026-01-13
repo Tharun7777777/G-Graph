@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login Redirect</title>
+  <title>Logging in…</title>
 </head>
 <body>
   <h3>Signing you in…</h3>
 
   <script>
-    // Get hash params
     const hash = window.location.hash;
 
     if (hash && hash.includes("access_token")) {
-      // 🔥 Redirect to Android app
+      // 🚀 Send token to Android
       window.location.href = "smsapp://login" + hash;
     } else {
-      // ❌ No token → DO NOT redirect to dashboard
-      document.body.innerHTML = "<h3>Invalid or expired link</h3>";
+      document.body.innerHTML = "<h3>Invalid or expired login link</h3>";
     }
   </script>
 </body>
