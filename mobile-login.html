@@ -6,5 +6,12 @@
   window.location.href = "smsapp://login" + window.location.hash;
 </script>
 <p>Opening app…</p>
+  <script>
+  if (window.location.hash.includes("access_token")) {
+    window.location.href = "smsapp://login" + window.location.hash;
+  }
+</script>
+
 </body>
 </html>
+
